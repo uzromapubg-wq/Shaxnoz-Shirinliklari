@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Shaxnoz Shirinliklari</title>
+<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fdf2f5;--card:#fff;--ink:#3b1f3a;--mute:#7d6279;--pink:#e2557f;--pist:#9cc185;--line:#f0d9e1;box-sizing:border-box}
+@media (prefers-color-scheme:dark){:root{--bg:#1f1221;--card:#2c1a2e;--ink:#f8e9f0;--mute:#c0a3bb;--pink:#f0698f;--line:#44284a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Nunito',system-ui,sans-serif;line-height:1.5;padding:env(safe-area-inset-top) 0 100px}
+header,main{max-width:720px;margin:0 auto;padding:16px}
+h1,h2{font-family:'Bagel Fat One','Nunito',sans-serif;font-weight:400;color:var(--pink);margin:0}
+h1{font-size:clamp(2rem,9vw,3.2rem);line-height:1.05;cursor:pointer;user-select:none}
+header p{margin:8px 0 0;color:var(--mute)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.item{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.pic{height:96px;border-radius:12px;display:grid;place-items:center;font-size:2.4rem;background:var(--pist) center/cover}
+.item h3{margin:0;font-size:1rem}.item small{color:var(--mute)}.price{font-weight:800}
+.step{display:flex;align-items:center;justify-content:space-between;margin-top:auto}
+button{font:inherit;cursor:pointer}
+.add,.pm,.pri{border:0;border-radius:999px;background:var(--pink);color:#fff;font-weight:800}
+.add{padding:8px 14px;width:100%}.pm{width:36px;height:36px;font-size:1.2rem}.pri{padding:10px 16px}
+.sec{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:8px 14px;font-weight:700}
+.bar{position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:var(--card);border-top:1px solid var(--line)}
+.bar button{display:block;width:100%;max-width:720px;margin:0 auto;border:0;border-radius:14px;padding:14px;background:var(--pink);color:#fff;font-weight:800}
+.bar button:disabled{opacity:.45}
+dialog{border:0;border-radius:20px;padding:20px;width:min(94vw,460px);background:var(--card);color:var(--ink)}
+dialog::backdrop{background:rgba(30,10,30,.55)}
+.row{display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px dashed var(--line)}
+label{display:block;margin-top:12px;font-weight:600;font-size:.9rem}
+input,textarea,select{width:100%;margin-top:4px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);font:inherit}
+input[type=checkbox]{width:auto;margin-right:8px}
+.err{color:var(--pink);font-size:.85rem;min-height:1.2em;margin:8px 0 0}
+.acts{display:flex;gap:8px;margin-top:12px}.acts>*{flex:1}
+:focus-visible{outline:3px solid var(--pist);outline-offset:2px}
+#adm{position:fixed;inset:0;background:var(--bg);overflow:auto;padding:calc(12px + env(safe-area-inset-top)) 16px 40px;z-index:5}
+#adm .w{max-width:720px;margin:0 auto}
+.tabs{display:flex;gap:8px;margin:12px 0}.tabs .on{background:var(--pink);color:#fff;border-color:var(--pink)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;margin:10px 0}
+.pr{display:flex;gap:10px;align-items:center}.pr .pic{width:56px;height:56px;font-size:1.6rem;flex:none}.pr>div:nth-child(2){flex:1}
+.st{display:inline-block;padding:2px 10px;border-radius:99px;background:var(--pist);color:#1d2b14;font-size:.8rem;font-weight:800}
+#ab{position:fixed;right:14px;bottom:84px;z-index:4;border:0;border-radius:99px;padding:10px 16px;background:var(--ink);color:var(--bg);font-weight:800}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header><h1 id="logo">Shaxnoz Shirinliklari</h1><p>O'zimiz tayyorlagan shirinliklar. Tanlang, buyurtma bering, biz bog'lanamiz.</p></header>
+<main><div class="grid" id="grid"></div><p id="empty" hidden>Hozircha mahsulotlar yo'q.</p></main>
+<div class="bar"><button id="open" disabled>Savat bo'sh</button></div>
+<button id="ab" hidden>Admin</button>
+
+<dialog id="dlg">
+  <div id="form">
+    <h2>Buyurtmangiz</h2><div id="lines"></div>
+    <div class="row"><b>Jami</b><b id="tot"></b></div>
+    <label>Ismingiz<input id="name" autocomplete="name" maxlength="80"></label>
+    <label>Telefon raqamingiz<input id="phone" type="tel" placeholder="+998 90 123 45 67" autocomplete="tel" maxlength="25"></label>
+    <label>Manzil (yetkazib berish uchun)<input id="addr" autocomplete="street-address" maxlength="200"></label>
+    <label>Izoh<textarea id="note" rows="2" maxlength="300"></textarea></label>
+    <p class="err" id="err" role="alert"></p>
+    <div class="acts"><button class="sec" id="close" type="button">Orqaga</button><button class="pri" id="send" type="button">Buyurtma berish</button></div>
+  </div>
+  <div id="ok" hidden>
+    <h2>Rahmat!</h2><p>Buyurtmangiz qabul qilindi. Tez orada siz bilan bog'lanamiz.</p>
+    <div class="acts"><a id="tg" class="sec" target="_blank" rel="noopener" style="text-align:center;text-decoration:none">Telegramda yozish</a><button class="pri" id="okc" type="button">Yopish</button></div>
+  </div>
+</dialog>
+
+<dialog id="login">
+  <h2>Admin kirishi</h2>
+  <label>Email<input id="em" type="email" autocomplete="username"></label>
+  <label>Parol<input id="pw" type="password" autocomplete="current-password"></label>
+  <p class="err" id="lerr" role="alert"></p>
+  <div class="acts"><button class="sec" id="lc" type="button">Bekor qilish</button><button class="pri" id="lg" type="button">Kirish</button></div>
+</dialog>
+
+<section id="adm" hidden><div class="w">
+  <div class="pr"><h2 style="flex:1">Admin panel</h2><button class="sec" id="aclose">Do'konga qaytish</button><button class="sec" id="aout">Chiqish</button></div>
+  <div class="tabs"><button class="sec on" data-t="p">Mahsulotlar</button><button class="sec" data-t="o" id="otab">Buyurtmalar</button></div>
+  <div id="tp">
+    <div class="card"><b id="ftitle">Yangi mahsulot</b>
+      <label>Nomi<input id="pn" maxlength="60"></label>
+      <label>Tavsif (masalan: Asalli, 500 g)<input id="pi" maxlength="80"></label>
+      <label>Narxi (so'm)<input id="pp" type="number" inputmode="numeric" min="0"></label>
+      <label>Rasm<input id="pf" type="file" accept="image/*"></label>
+      <label><input id="pa" type="checkbox" checked>Sotuvda bor</label>
+      <p class="err" id="perr"></p>
+      <div class="acts"><button class="sec" id="pc" type="button">Tozalash</button><button class="pri" id="ps" type="button">Saqlash</button></div>
+    </div>
+    <div id="plist"></div>
+  </div>
+  <div id="to" hidden><div id="olist"></div></div>
+</div></section>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js";
+import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
+import {getFirestore,collection,doc,addDoc,setDoc,deleteDoc,updateDoc,onSnapshot,query,orderBy,serverTimestamp} from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
+
+const app=initializeApp({apiKey:"AIzaSyAvnFrDkdK_Zov7EfxP8VDzyUr4K3aDrNU",authDomain:"shaxnoz-shirinliklari-a9c57.firebaseapp.com",projectId:"shaxnoz-shirinliklari-a9c57",storageBucket:"shaxnoz-shirinliklari-a9c57.firebasestorage.app",messagingSenderId:"516006438707",appId:"1:516006438707:web:8cadb015038d9f968f8046"});
+const auth=getAuth(app),db=getFirestore(app);
+const ADMIN="O6dI6NK2rSTGEwPHzjdXxZpyrlg1",TG="im_gulomov";
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const som=n=>Number(n||0).toLocaleString("ru-RU")+" so'm";
+const ST={new:"Yangi",cooking:"Tayyorlanmoqda",done:"Yetkazildi",cancel:"Bekor qilindi"};
+let products=[],orders=[],cart={},isAdmin=false,editId=null,editImg="",unsubO=null;
+
+const pic=p=>`<div class="pic" ${p.img?`style="background-image:url('${esc(p.img)}')"`:""}>${p.img?"":"🍬"}</div>`;
+const total=()=>products.reduce((s,p)=>s+(cart[p.id]||0)*p.price,0);
+const count=()=>products.reduce((s,p)=>s+(cart[p.id]||0),0);
+
+onSnapshot(collection(db,"products"),s=>{
+  products=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.name||"").localeCompare(b.name||""));
+  Object.keys(cart).forEach(k=>{if(!products.find(p=>p.id===k&&p.available!==false))delete cart[k]});
+  grid();plist();
+});
+function grid(){
+  const ps=products.filter(p=>p.available!==false);
+  $("empty").hidden=ps.length>0;
+  $("grid").innerHTML=ps.map(p=>{const q=cart[p.id]||0;
+    const c=q?`<div class="step"><button class="pm" data-d="-1" data-id="${p.id}" aria-label="Kamaytirish">−</button><b>${q}</b><button class="pm" data-d="1" data-id="${p.id}" aria-label="Ko'paytirish">+</button></div>`:`<button class="add" data-d="1" data-id="${p.id}">Qo'shish</button>`;
+    return `<div class="item">${pic(p)}<h3>${esc(p.name)}</h3><small>${esc(p.info)}</small><span class="price">${som(p.price)}</span>${c}</div>`}).join("");
+  const n=count();$("open").disabled=!n;$("open").textContent=n?`Savat: ${n} ta, ${som(total())}`:"Savat bo'sh";
+}
+$("grid").onclick=e=>{const b=e.target.closest("button[data-id]");if(!b)return;cart[b.dataset.id]=Math.max(0,(cart[b.dataset.id]||0)+ +b.dataset.d);grid()};
+$("open").onclick=()=>{
+  $("lines").innerHTML=products.filter(p=>cart[p.id]).map(p=>`<div class="row"><span>${esc(p.name)} × ${cart[p.id]}</span><span>${som(p.price*cart[p.id])}</span></div>`).join("");
+  $("tot").textContent=som(total());$("err").textContent="";$("form").hidden=false;$("ok").hidden=true;$("dlg").showModal();
+};
+$("close").onclick=()=>$("dlg").close();$("okc").onclick=()=>$("dlg").close();
+$("send").onclick=async()=>{
+  const name=$("name").value.trim(),phone=$("phone").value.trim(),addr=$("addr").value.trim(),note=$("note").value.trim();
+  if(!name||phone.replace(/\D/g,"").length<9){$("err").textContent="Ismingiz va telefon raqamingizni to'liq kiriting.";return}
+  const items=products.filter(p=>cart[p.id]).map(p=>({n:p.name,q:cart[p.id],p:p.price}));
+  if(!items.length)return;
+  $("send").disabled=true;
+  try{
+    await addDoc(collection(db,"orders"),{name,phone,addr,note,items,total:total(),status:"new",createdAt:serverTimestamp()});
+    const t=["Yangi buyurtma (Shaxnoz Shirinliklari)","",...items.map(i=>`• ${i.n} × ${i.q} = ${som(i.p*i.q)}`),"",`Jami: ${som(total())}`,`Ism: ${name}`,`Telefon: ${phone}`,addr?`Manzil: ${addr}`:""].join("\n");
+    $("tg").href=`https://t.me/${TG}?text=${encodeURIComponent(t)}`;
+    cart={};grid();$("form").hidden=true;$("ok").hidden=false;
+  }catch(e){$("err").textContent="Buyurtma yuborilmadi. Internetni tekshirib, qayta urinib ko'ring."}
+  $("send").disabled=false;
+};
+
+/* admin kirish: logotipni 5 marta bosing */
+let taps=0,tt;
+$("logo").onclick=()=>{taps++;clearTimeout(tt);tt=setTimeout(()=>taps=0,2000);if(taps>=5){taps=0;isAdmin?openAdm():($("lerr").textContent="",$("login").showModal())}};
+$("lc").onclick=()=>$("login").close();
+$("lg").onclick=async()=>{
+  try{await signInWithEmailAndPassword(auth,$("em").value.trim(),$("pw").value);$("pw").value="";}
+  catch(e){$("lerr").textContent="Email yoki parol noto'g'ri."}
+};
+onAuthStateChanged(auth,u=>{
+  if(u&&u.uid===ADMIN){isAdmin=true;$("login").close();$("ab").hidden=false;openAdm();
+    unsubO=onSnapshot(query(collection(db,"orders"),orderBy("createdAt","desc")),s=>{orders=s.docs.map(d=>({id:d.id,...d.data()}));olist()})}
+  else{if(u){signOut(auth);$("lerr").textContent="Bu akkaunt admin emas.";}
+    isAdmin=false;$("ab").hidden=true;$("adm").hidden=true;unsubO&&unsubO();unsubO=null;orders=[]}
+});
+const openAdm=()=>{$("adm").hidden=false;$("ab").hidden=true};
+$("ab").onclick=openAdm;
+$("aclose").onclick=()=>{$("adm").hidden=true;$("ab").hidden=false};
+$("aout").onclick=()=>signOut(auth);
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll(".tabs button").forEach(x=>x.classList.toggle("on",x===b));
+  $("tp").hidden=b.dataset.t!=="p";$("to").hidden=b.dataset.t!=="o"});
+
+/* mahsulotlar */
+const shrink=f=>new Promise(r=>{const i=new Image();i.onload=()=>{const s=Math.min(1,480/Math.max(i.width,i.height)),c=document.createElement("canvas");c.width=i.width*s;c.height=i.height*s;c.getContext("2d").drawImage(i,0,0,c.width,c.height);r(c.toDataURL("image/jpeg",.7))};i.src=URL.createObjectURL(f)});
+function plist(){
+  $("plist").innerHTML=products.map(p=>`<div class="card pr">${pic(p)}<div><b>${esc(p.name)}</b><br><small>${som(p.price)}${p.available===false?" · sotuvda yo'q":""}</small></div><button class="sec" data-e="${p.id}">Tahrirlash</button><button class="sec" data-x="${p.id}">O'chirish</button></div>`).join("");
+}
+function clearForm(){editId=null;editImg="";["pn","pi","pp","pf"].forEach(i=>$(i).value="");$("pa").checked=true;$("ftitle").textContent="Yangi mahsulot";$("perr").textContent=""}
+$("pc").onclick=clearForm;
+$("ps").onclick=async()=>{
+  const name=$("pn").value.trim(),price=Math.round(Number($("pp").value));
+  if(!name||!(price>=0)||$("pp").value===""){$("perr").textContent="Nomi va narxini kiriting.";return}
+  $("ps").disabled=true;
+  try{
+    const f=$("pf").files[0];if(f)editImg=await shrink(f);
+    const data={name,info:$("pi").value.trim(),price,available:$("pa").checked,img:editImg};
+    editId?await setDoc(doc(db,"products",editId),data):await addDoc(collection(db,"products"),data);
+    clearForm();
+  }catch(e){$("perr").textContent="Saqlanmadi. Qayta kirib ko'ring."}
+  $("ps").disabled=false;
+};
+$("plist").onclick=async e=>{
+  const x=e.target.closest("[data-x]"),ed=e.target.closest("[data-e]");
+  if(x&&confirm("Mahsulot o'chirilsinmi?"))await deleteDoc(doc(db,"products",x.dataset.x));
+  if(ed){const p=products.find(p=>p.id===ed.dataset.e);editId=p.id;editImg=p.img||"";$("pn").value=p.name;$("pi").value=p.info||"";$("pp").value=p.price;$("pa").checked=p.available!==false;$("pf").value="";$("ftitle").textContent="Tahrirlash: "+p.name;scrollTo(0,0);$("adm").scrollTo(0,0)}
+};
+
+/* buyurtmalar */
+function olist(){
+  const n=orders.filter(o=>o.status==="new").length;
+  $("otab").textContent=n?`Buyurtmalar (${n} yangi)`:"Buyurtmalar";
+  $("olist").innerHTML=orders.length?orders.map(o=>`<div class="card"><div class="row"><b>${esc(o.name)}</b><small>${o.createdAt?o.createdAt.toDate().toLocaleString("ru-RU"):""}</small></div>
+    <div><a href="tel:${esc(o.phone)}">${esc(o.phone)}</a>${o.addr?"<br>"+esc(o.addr):""}${o.note?"<br><i>"+esc(o.note)+"</i>":""}</div>
+    ${(o.items||[]).map(i=>`<div class="row"><span>${esc(i.n)} × ${esc(i.q)}</span><span>${som(i.p*i.q)}</span></div>`).join("")}
+    <div class="row"><b>Jami</b><b>${som(o.total)}</b></div>
+    <label>Holati<select data-s="${o.id}">${Object.entries(ST).map(([k,v])=>`<option value="${k}" ${o.status===k?"selected":""}>${v}</option>`).join("")}</select></label>
+    <div class="acts"><button class="sec" data-od="${o.id}">O'chirish</button></div></div>`).join(""):"<p>Hozircha buyurtmalar yo'q.</p>";
+}
+$("olist").onchange=e=>{const s=e.target.closest("[data-s]");s&&updateDoc(doc(db,"orders",s.dataset.s),{status:s.value})};
+$("olist").onclick=e=>{const d=e.target.closest("[data-od]");d&&confirm("Buyurtma o'chirilsinmi?")&&deleteDoc(doc(db,"orders",d.dataset.od))};
+</script>
+</body>
+</html>
