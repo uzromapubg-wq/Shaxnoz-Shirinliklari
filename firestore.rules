@@ -1,0 +1,44 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null && request.auth.uid == 'O6dI6NK2rSTGEwPHzjdXxZpyrlg1';
+    }
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+    match /products/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /settings/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /users/{uid} {
+      allow read, write: if isAdmin() || isOwner(uid);
+    }
+    match /orders/{id} {
+      allow create: if request.auth != null
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.status == 'new'
+                    && request.resource.data.name is string
+                    && request.resource.data.name.size() <= 100
+                    && request.resource.data.items is list
+                    && request.resource.data.items.size() <= 50;
+      allow read: if isAdmin() || (request.auth != null && resource.data.uid == request.auth.uid);
+      allow update, delete: if isAdmin();
+    }
+    match /chats/{uid} {
+      allow read, write: if isAdmin() || isOwner(uid);
+      match /msgs/{m} {
+        allow read: if isAdmin() || isOwner(uid);
+        allow create: if (isAdmin() && request.resource.data.from == 'admin')
+                      || (isOwner(uid) && request.resource.data.from == 'user'
+                          && request.resource.data.text is string
+                          && request.resource.data.text.size() <= 500);
+        allow update, delete: if isAdmin();
+      }
+    }
+  }
+}
